@@ -28,12 +28,13 @@ make test-gui          # Boot in QEMU with VGA display
 make ssh               # SSH into running QEMU instance (port 2222)
 make clean             # Remove work/ directory
 make distclean         # Remove work/ and output/
+make status            # Show disk usage of work/ and output/
 ```
 
 **build.sh flags:**
 - `--base debian|alpine` — select base system (default: debian)
 - `--with-docker` — include Docker in image (adds ~200-400MB)
-- `--version VERSION` — specify Landscape release version (default: latest)
+- `--version VERSION` — specify Landscape release version (default: value from `build.env`, currently `v0.13.0`)
 - `--skip-to PHASE` — resume build from phase 1-8 (useful during development)
 
 **Environment overrides** (respected by both build.sh and CI):
@@ -89,6 +90,7 @@ The 8 sequential phases:
   - `rootfs/etc/init.d/` — OpenRC init scripts (Alpine)
   - `rootfs/etc/sysctl.d/` — sysctl tuning
   - `rootfs/usr/local/bin/expand-rootfs.sh` — Auto-expand root partition
+  - `rootfs/usr/local/bin/setup-mirror.sh` — Mirror switching tool (Chinese mirrors for apt/apk)
 - `configs/landscape_init.toml` — Optional router init config (WAN/LAN interfaces, DHCP, NAT rules)
 - `tests/test-auto.sh` — Automated test runner (QEMU lifecycle, SSH health checks, supports both systemd and OpenRC)
 - `tests/test-e2e.sh` — End-to-end network test (2-VM: Router + CirrOS client, tests DHCP/DNS/NAT)
@@ -151,6 +153,7 @@ Router VM (eth0=WAN/SLIRP, eth1=LAN/mcast) ←→ Client VM (CirrOS, eth0=mcast)
 - Router's DHCP server assigns 192.168.10.x to the client
 - Tests: DHCP assignment (via API), gateway ping, DNS resolution, NAT (client→internet via SSH hop)
 - Client interaction uses SSH ProxyCommand hop: host → router → CirrOS
+- Test logs saved to `output/test-logs/`
 
 ### CI/CD
 
