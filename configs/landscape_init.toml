@@ -1,15 +1,15 @@
 [[ifaces]]
-name = "eth0"
+name = "eth1"
 zone_type = "wan"
 enable_in_boot = true
 
 [[ifaces]]
-name = "eth1"
+name = "eth0"
 zone_type = "lan"
 enable_in_boot = true
 
 [[ipconfigs]]
-iface_name = "eth0"
+iface_name = "eth1"
 enable = true
 
 [ipconfigs.ip_model]
@@ -17,25 +17,25 @@ t = "dhcpclient"
 default_router = true
 
 [[nats]]
-iface_name = "eth0"
+iface_name = "eth1"
 enable = true
 
 [[dhcpv4_services]]
-iface_name = "eth1"
+iface_name = "eth0"
 enable = true
 
 [dhcpv4_services.config]
-ip_range_start = "192.168.10.2"
-ip_range_end = "192.168.10.254"
-server_ip_addr = "192.168.10.1"
+ip_range_start = "192.168.2.1"
+ip_range_end = "192.168.2.255"
+server_ip_addr = "192.168.2.1"
 network_mask = 24
 
 [[route_lans]]
-iface_name = "eth1"
+iface_name = "eth0"
 enable = true
 
 [[route_wans]]
-iface_name = "eth0"
+iface_name = "eth1"
 enable = true
 
 [[static_nat_mappings]]
