@@ -1,4 +1,4 @@
-name: Test Image
+name: Test Image (ESXi)
 
 on:
   workflow_dispatch:
@@ -17,6 +17,7 @@ jobs:
           - variant: docker
           - variant: alpine
           - variant: alpine-docker
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,8 +25,11 @@ jobs:
       - name: Install test dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y sshpass socat curl qemu-system-x86 ovmf
+          sudo apt-get install -y sshpass socat curl qemu-utils qemu-system-x86 ovmf
 
+      # ---------------------------
+      # 下载构建产物（img）
+      # ---------------------------
       - name: Download image from build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -45,14 +49,37 @@ jobs:
           workflow: ci.yml
           search_artifacts: true
 
+      - name: List downloaded files
+        run: ls -lh output/
+
+      # ---------------------------
+      # 转换为 ESXi 可用 VMDK
+      # ---------------------------
+      - name: Convert IMG to ESXi VMDK
+        run: |
+          IMG_FILE=$(ls output/*.img | head -n 1)
+          echo "Found image: $IMG_FILE"
+
+          # ESXi 需要 streamOptimized 格式
+          qemu-img convert -p -f raw -O vmdk \
+            -o subformat=streamOptimized,compat6 \
+            "$IMG_FILE" output/landscape-mini-${{ matrix.variant }}.vmdk
+
+          ls -lh output/
+
+      # ---------------------------
+      # 使用 VMDK 运行测试
+      # ---------------------------
       - name: Run health checks (${{ matrix.variant }})
         run: |
-          ls -lh output/
-          ./tests/test-auto.sh output/*.img
+          ./tests/test-auto.sh output/*.vmdk
 
       - name: Run E2E network tests (${{ matrix.variant }})
-        run: ./tests/test-e2e.sh output/*.img
+        run: ./tests/test-e2e.sh output/*.vmdk
 
+      # ---------------------------
+      # 上传测试日志
+      # ---------------------------
       - name: Upload test logs
         if: always()
         uses: actions/upload-artifact@v4
